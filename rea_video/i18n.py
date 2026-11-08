@@ -1,6 +1,7 @@
 """Report language.
 
-Chinese is the source language of every user-facing string; English sits next to it. Two helpers:
+Chinese is the source language of every user-facing string; English sits next to it, and Japanese lives in
+the locale_ja catalogue keyed by the Chinese string (anything missing there falls back to English). Two helpers:
 
   T("中文", "English")          pick the string for the current report language (optional .format kwargs)
   LangDict(zh={...}, en={...})  a code -> text mapping that resolves per language, so existing `X_ZH[code]`
@@ -15,8 +16,10 @@ import contextvars
 from collections.abc import Mapping
 from typing import Iterator
 
-LANGS = ("zh", "en")
-LANG_NAMES = {"zh": "中文", "en": "English"}
+from .locale_ja import JA
+
+LANGS = ("zh", "en", "ja")
+LANG_NAMES = {"zh": "中文", "en": "English", "ja": "日本語"}
 _lang: contextvars.ContextVar[str] = contextvars.ContextVar("rea_video_lang", default="zh")
 
 
@@ -32,15 +35,26 @@ def lang() -> str:
     return _lang.get()
 
 
+def _pick(zh, en):
+    """The string for the current language: ja uses the catalogue, then English, then the Chinese source."""
+    cur = _lang.get()
+    if cur == "en":
+        return zh if en is None else en
+    if cur == "ja":
+        ja = JA.get(zh) if isinstance(zh, str) else None
+        return ja if ja is not None else (zh if en is None else en)
+    return zh
+
+
 def T(zh: str, en: str | None = None, **kw) -> str:
     """Text for the current language; `en` missing falls back to zh. kwargs are applied with str.format."""
-    s = en if (en is not None and _lang.get() == "en") else zh
+    s = _pick(zh, en)
     return s.format(**kw) if kw else s
 
 
 def sep() -> str:
-    """List separator: 、 in Chinese, ", " in English."""
-    return "、" if _lang.get() == "zh" else ", "
+    """List separator: 、 in Chinese and Japanese, ", " in English."""
+    return ", " if _lang.get() == "en" else "、"
 
 
 def join(items) -> str:
@@ -48,8 +62,8 @@ def join(items) -> str:
 
 
 def semi() -> str:
-    """Clause separator: ； in Chinese, "; " in English."""
-    return "；" if _lang.get() == "zh" else "; "
+    """Clause separator: ； in Chinese, 。 in Japanese, "; " in English."""
+    return {"en": "; ", "ja": "。"}.get(_lang.get(), "；")
 
 
 class LangDict(Mapping):
@@ -60,9 +74,7 @@ class LangDict(Mapping):
         self._en = dict(en or {})
 
     def __getitem__(self, key):
-        if _lang.get() == "en" and key in self._en:
-            return self._en[key]
-        return self._zh[key]
+        return _pick(self._zh[key], self._en.get(key))
 
     def __iter__(self) -> Iterator:
         return iter(self._zh)

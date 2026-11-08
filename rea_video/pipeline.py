@@ -206,6 +206,7 @@ def decompose(video: str | Path, out_dir: str | Path, *, use_vlm: bool = False, 
 
             def run_unit(unit: list[dict]) -> None:
                 """One VLM call per unit: a single shot, or the jump-cut pieces of one take seen as one clip."""
+                set_lang(lang)  # worker threads do not inherit the contextvar, and the prompt note depends on it
                 first, last = unit[0], unit[-1]
                 span = last["end"] - first["start"]
                 media = []

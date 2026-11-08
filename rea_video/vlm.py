@@ -423,4 +423,7 @@ def prompt_lang_note() -> str:
     if lang() == "en":
         return ("\n\nWrite every free-text value (evidence, description, style, summary, copy, prompts, aspects answers) in English. "
                 "Keep enum values exactly as listed. `image_prompt` and `video_prompt` in English; `video_prompt_en` may repeat it.")
+    if lang() == "ja":
+        return ("\n\nWrite every free-text value (evidence, description, style, summary, copy, prompts, aspects answers) in natural Japanese. "
+                "Keep enum values exactly as listed. Write `image_prompt` and `video_prompt` in Japanese and always fill `video_prompt_en` in English.")
     return ""

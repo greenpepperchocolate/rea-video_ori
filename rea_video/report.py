@@ -331,7 +331,7 @@ def _audio_md(b: dict) -> list[str]:
 
     # sfx
     sfx = (b.get("audio_plan") or {}).get("sfx_merged", [])
-    L += ["", T("**音效**", "**Sound effects**") + (f"（{len(sfx)}）" if sfx and lang() == "zh" else (f" ({len(sfx)})" if sfx else "")), ""]
+    L += ["", T("**音效**", "**Sound effects**") + (f"（{len(sfx)}）" if sfx and lang() != "en" else (f" ({len(sfx)})" if sfx else "")), ""]
     if sfx:
         rows = []
         for e in sfx[:60]:
